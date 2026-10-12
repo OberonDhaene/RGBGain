@@ -41,15 +41,14 @@ jobs:
               -DOFX_ROOT="${{ github.workspace }}/openfx"
           fi
 
-      - name: Build
-        run: cmake --build build --config Release
-
-      - name: Ad-hoc sign (macOS)
-        if: matrix.name == 'macos'
-        run: codesign --force --deep --sign - build/RGBGain.ofx.bundle
+           - name: Stage bundle
+        shell: bash
+        run: |
+          mkdir stage
+          cp -R build/RGBGain.ofx.bundle stage/
 
       - name: Upload bundle
         uses: actions/upload-artifact@v4
         with:
           name: RGBGain-${{ matrix.name }}
-          path: build/RGBGain.ofx.bundle
+          path: stage
