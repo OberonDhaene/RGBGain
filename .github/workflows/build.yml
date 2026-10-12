@@ -41,7 +41,7 @@ jobs:
               -DOFX_ROOT="${{ github.workspace }}/openfx"
           fi
 
-           - name: Stage bundle
+               - name: Stage bundle
         shell: bash
         run: |
           mkdir stage
