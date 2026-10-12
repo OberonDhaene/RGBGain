@@ -3,7 +3,7 @@ name: Build RGBGain
 on:
   push:
     branches: [main]
-  workflow_dispatch:   # lets you start a build manually from the Actions tab
+  workflow_dispatch:
 
 jobs:
   build:
@@ -41,7 +41,14 @@ jobs:
               -DOFX_ROOT="${{ github.workspace }}/openfx"
           fi
 
-               - name: Stage bundle
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Ad-hoc sign (macOS)
+        if: matrix.name == 'macos'
+        run: codesign --force --deep --sign - build/RGBGain.ofx.bundle
+
+      - name: Stage bundle
         shell: bash
         run: |
           mkdir stage
