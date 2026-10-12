@@ -1,0 +1,55 @@
+name: Build RGBGain
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:   # lets you start a build manually from the Actions tab
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            name: windows
+          - os: macos-latest
+            name: macos
+          - os: ubuntu-latest
+            name: linux
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Check out plugin source
+        uses: actions/checkout@v4
+
+      - name: Check out OpenFX SDK
+        uses: actions/checkout@v4
+        with:
+          repository: AcademySoftwareFoundation/openfx
+          path: openfx
+
+      - name: Configure
+        shell: bash
+        run: |
+          if [ "${{ matrix.name }}" = "macos" ]; then
+            cmake -B build -DCMAKE_BUILD_TYPE=Release \
+              -DOFX_ROOT="${{ github.workspace }}/openfx" \
+              -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+          else
+            cmake -B build -DCMAKE_BUILD_TYPE=Release \
+              -DOFX_ROOT="${{ github.workspace }}/openfx"
+          fi
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Ad-hoc sign (macOS)
+        if: matrix.name == 'macos'
+        run: codesign --force --deep --sign - build/RGBGain.ofx.bundle
+
+      - name: Upload bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: RGBGain-${{ matrix.name }}
+          path: build/RGBGain.ofx.bundle
